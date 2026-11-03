@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShieldBlock - Dashboard & Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L4 5V11C4 16.5 7.5 21.5 12 22C16.5 21.5 20 16.5 20 11V5L12 2Z" fill="url(#shieldGradSide)" />
+            <path d="M9 12L11 14L15 10" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="shieldGradSide" x1="4" y1="2" x2="20" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#10B981" />
+                <stop offset="1" stop-color="#06B6D4" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div>
+          <h2>ShieldBlock</h2>
+          <span class="version-label">v1.0.0 Manifest V3</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-tab active" data-tab="tab-overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          <span>Overview</span>
+        </button>
+
+        <button class="nav-tab" data-tab="tab-whitelist">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Allowlist</span>
+        </button>
+
+        <button class="nav-tab" data-tab="tab-filters">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          <span>Custom Filters</span>
+        </button>
+
+        <button class="nav-tab" data-tab="tab-backup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Backup & Sync</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <span class="pulse-dot"></span>
+          <span>Engine Running</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Overview Tab -->
+      <section class="tab-pane active" id="tab-overview">
+        <header class="pane-header">
+          <div>
+            <h1>Security & Protection Overview</h1>
+            <p>Real-time telemetry and ad blocking impact metrics</p>
+          </div>
+          <button class="btn btn-secondary" id="resetStatsBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>Reset Statistics</span>
+          </button>
+        </header>
+
+        <div class="stats-cards-grid">
+          <div class="dashboard-stat-card glow-emerald">
+            <div class="stat-header">
+              <span class="stat-label">Total Blocks</span>
+              <div class="stat-badge">All-Time</div>
+            </div>
+            <div class="stat-value" id="dashTotalBlocked">0</div>
+            <div class="stat-desc">Combined network & visual threats blocked</div>
+          </div>
+
+          <div class="dashboard-stat-card glow-cyan">
+            <div class="stat-header">
+              <span class="stat-label">Network Requests</span>
+              <div class="stat-badge cyan">DNR Engine</div>
+            </div>
+            <div class="stat-value" id="dashNetworkBlocked">0</div>
+            <div class="stat-desc">Blocked via Declarative Net Request rules</div>
+          </div>
+
+          <div class="dashboard-stat-card glow-purple">
+            <div class="stat-header">
+              <span class="stat-label">Cosmetic Injections</span>
+              <div class="stat-badge purple">DOM Cleaner</div>
+            </div>
+            <div class="stat-value" id="dashCosmeticBlocked">0</div>
+            <div class="stat-desc">Hidden banner placeholders & dynamic overlays</div>
+          </div>
+        </div>
+
+        <div class="settings-card">
+          <h3>Protection Engines</h3>
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Declarative Network Shield</h4>
+              <p>Blocks tracking scripts, ad pixels, and telemetry before download starts.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingNetworkEngine" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Cosmetic DOM Cleaner</h4>
+              <p>Hides blank ad wrappers, collapsed boxes, and sticky banner ads on web pages.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingCosmeticEngine" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Auto-Skip Video Ads</h4>
+              <p>Automatically accelerates and clicks skip buttons on streaming media players.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingVideoEngine" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Whitelist Tab -->
+      <section class="tab-pane" id="tab-whitelist">
+        <header class="pane-header">
+          <div>
+            <h1>Domain Allowlist</h1>
+            <p>ShieldBlock will pause filtering on these trusted domains</p>
+          </div>
+        </header>
+
+        <div class="input-action-bar">
+          <input type="text" id="whitelistInput" placeholder="e.g. example.com or trusted-site.org">
+          <button class="btn btn-primary" id="addWhitelistBtn">Add Domain</button>
+        </div>
+
+        <div class="items-list-container">
+          <div class="list-header">
+            <span>Whitelisted Domains (<span id="whitelistCount">0</span>)</span>
+          </div>
+          <ul class="domain-list" id="whitelistUl">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Custom Filters Tab -->
+      <section class="tab-pane" id="tab-filters">
+        <header class="pane-header">
+          <div>
+            <h1>Custom User Filter Rules</h1>
+            <p>Add custom CSS element-hiding selectors or ad URLs</p>
+          </div>
+        </header>
+
+        <div class="input-action-bar">
+          <input type="text" id="customRuleInput" placeholder="e.g. ##.sponsored-card or ||tracker-domain.com^">
+          <button class="btn btn-primary" id="addCustomRuleBtn">Add Filter</button>
+        </div>
+
+        <div class="items-list-container">
+          <div class="list-header">
+            <span>User Rules (<span id="customRulesCount">0</span>)</span>
+          </div>
+          <ul class="domain-list" id="customRulesUl">
+            <!-- Dynamically populated -->
+          </ul>
+        </div>
+      </section>
+
+      <!-- Backup & Sync Tab -->
+      <section class="tab-pane" id="tab-backup">
+        <header class="pane-header">
+          <div>
+            <h1>Backup & Data Portability</h1>
+            <p>Export your whitelist and custom preferences or restore from a backup</p>
+          </div>
+        </header>
+
+        <div class="settings-card">
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Export Configuration</h4>
+              <p>Download a JSON backup of your whitelist, custom rules, and preferences.</p>
+            </div>
+            <button class="btn btn-secondary" id="exportBtn">Export JSON</button>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Import Configuration</h4>
+              <p>Restore settings from a previously saved JSON configuration file.</p>
+            </div>
+            <label class="btn btn-primary file-label">
+              <span>Import JSON</span>
+              <input type="file" id="importFileInput" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

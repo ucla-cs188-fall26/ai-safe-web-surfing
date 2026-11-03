@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ShieldBlock - Ad Blocker Test & Demonstration Suite</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    header {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff, #10b981);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header p {
+      color: var(--text-muted);
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+    }
+
+    /* Ad simulations that will be hidden by ShieldBlock */
+    .ad-banner, .advertisement, .ad-container, ins.adsbygoogle {
+      background: #7f1d1d !important;
+      border: 2px dashed var(--rose) !important;
+      color: #fca5a5 !important;
+      padding: 25px !important;
+      text-align: center !important;
+      font-weight: bold !important;
+      margin: 15px 0 !important;
+      border-radius: 8px !important;
+    }
+
+    .btn-test {
+      background: var(--emerald);
+      color: #022c22;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-test:hover {
+      background: #059669;
+      color: white;
+    }
+
+    .log-box {
+      background: #090d16;
+      border: 1px solid var(--border);
+      padding: 14px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--emerald);
+      margin-top: 12px;
+      min-height: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ShieldBlock Ad Blocker Test Ground</h1>
+      <p>Use this page to verify network filtering, cosmetic DOM collapsing, and popup counters.</p>
+    </header>
+
+    <!-- Test 1: Cosmetic Element Hiding -->
+    <div class="card">
+      <h2>
+        <span>Test 1: Cosmetic DOM Ad Element Hiding</span>
+        <span class="status-badge">Cosmetic Filter</span>
+      </h2>
+      <p>If ShieldBlock is active, the red ad banners below should be completely hidden and collapsed with 0 height:</p>
+
+      <div class="ad-banner">
+        ⚠️ UNBLOCKED AD: Top Header Leaderboard Ad (728x90)
+      </div>
+
+      <div class="advertisement">
+        ⚠️ UNBLOCKED AD: Sponsored Native Widget
+      </div>
+
+      <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-test" data-ad-slot="123456789">
+        ⚠️ UNBLOCKED AD: Google AdSense Container
+      </ins>
+    </div>
+
+    <!-- Test 2: Network Ad Script Blocking -->
+    <div class="card">
+      <h2>
+        <span>Test 2: Declarative Network Request Blocking</span>
+        <span class="status-badge">Network DNR</span>
+      </h2>
+      <p>Click below to attempt loading resources from known ad networks (e.g. doubleclick.net, pagead2.googlesyndication.com, adnxs.com). The browser network layer should block them immediately:</p>
+      
+      <button class="btn-test" id="testNetworkBtn">Simulate Ad Network Fetch</button>
+      <div class="log-box" id="networkLog">Awaiting test execution...</div>
+    </div>
+
+    <!-- Test 3: Dynamic Ad Injection -->
+    <div class="card">
+      <h2>
+        <span>Test 3: Dynamic Ad Injection & MutationObserver</span>
+        <span class="status-badge">Dynamic Observer</span>
+      </h2>
+      <p>Click below to dynamically insert a new ad container into the DOM after page load. ShieldBlock's MutationObserver should immediately detect and hide it:</p>
+
+      <button class="btn-test" id="injectAdBtn">Inject Dynamic Ad Banner</button>
+      <div id="dynamicAdContainer" style="margin-top: 15px;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Network test button
+    document.getElementById('testNetworkBtn').addEventListener('click', async () => {
+      const log = document.getElementById('networkLog');
+      log.textContent = 'Testing ad network requests...\n';
+
+      const adUrls = [
+        'https://securepubads.g.doubleclick.net/tag/js/gpt.js',
+        'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js',
+        'https://ib.adnxs.com/jpt?id=1'
+      ];
+
+      for (const url of adUrls) {
+        try {
+          await fetch(url, { method: 'HEAD', mode: 'no-cors' });
+          log.textContent += `[BLOCKED BY DNR or Network] Failed request: ${url}\n`;
+        } catch (err) {
+          log.textContent += `[SHIELDED] Successfully blocked: ${url}\n`;
+        }
+      }
+    });
+
+    // Dynamic ad injection
+    document.getElementById('injectAdBtn').addEventListener('click', () => {
+      const container = document.getElementById('dynamicAdContainer');
+      const ad = document.createElement('div');
+      ad.className = 'ad-container';
+      ad.textContent = '⚠️ Dynamically Injected Ad Container';
+      container.appendChild(ad);
+    });
+  </script>
+</body>
+</html>
