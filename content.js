@@ -14,6 +14,22 @@
   let cosmeticFiltering = true;
   let blockedCount = 0;
   let observer = null;
+  let doomscrollingReminders = true;
+  let doomscrollingThresholdMinutes = 20;
+  let doomscrollingCooldownMinutes = 60;
+  let doomscrollingStartedAt = Date.now();
+  let lastActivityAt = Date.now();
+  let scrollDistance = 0;
+  let scrollEvents = 0;
+  let nextReminderAt = 0;
+  let reminderElement = null;
+  let reminderTimer = null;
+
+  const DOOMSCROLL_MIN_SCROLL_EVENTS = 30;
+  const DOOMSCROLL_MIN_DISTANCE = 5000;
+  const DOOMSCROLL_ACTIVITY_TIMEOUT = 120000;
+  const DOOMSCROLL_TEST_SCROLL_EVENTS = 5;
+  const DOOMSCROLL_TEST_DISTANCE = 500;
 
   // Selective list of high-confidence ad selectors for DOM removal
   const AD_SELECTORS = [
@@ -77,15 +93,95 @@
           isEnabled = response.isEnabled !== false;
           isWhitelisted = !!response.isWhitelisted;
           cosmeticFiltering = response.cosmeticFiltering !== false;
+          doomscrollingReminders = response.doomscrollingReminders !== false;
+          doomscrollingThresholdMinutes = clampMinutes(response.doomscrollingThresholdMinutes, 20);
+          doomscrollingCooldownMinutes = clampMinutes(response.doomscrollingCooldownMinutes, 60);
 
           if (isEnabled && !isWhitelisted && cosmeticFiltering) {
             startCosmeticFilter();
             startVideoAdSkipper();
           }
+          if (isEnabled && !isWhitelisted && doomscrollingReminders) {
+            startDoomscrollingDetector();
+          }
         }
       );
     } catch {
       // Context invalidated or extension reloaded
+    }
+
+    function clampMinutes(value, fallback) {
+      const minutes = Number(value);
+      return Number.isFinite(minutes) && minutes >= 1 && minutes <= 240 ? minutes : fallback;
+    }
+
+    function startDoomscrollingDetector() {
+      window.addEventListener('scroll', recordScrollActivity, { passive: true });
+      window.addEventListener('pointerdown', recordActivity, { passive: true });
+      window.addEventListener('keydown', recordActivity, { passive: true });
+      const checkInterval = doomscrollingThresholdMinutes === 1 ? 5000 : 30000;
+      reminderTimer = window.setInterval(checkForDoomscrolling, checkInterval);
+    }
+
+    function recordActivity() {
+      lastActivityAt = Date.now();
+    }
+
+    function recordScrollActivity() {
+      const currentScrollY = window.scrollY;
+      const previousScrollY = recordScrollActivity.lastScrollY ?? currentScrollY;
+      scrollDistance += Math.abs(currentScrollY - previousScrollY);
+      recordScrollActivity.lastScrollY = currentScrollY;
+      scrollEvents++;
+      recordActivity();
+    }
+
+    function checkForDoomscrolling() {
+      if (!doomscrollingReminders || reminderElement) return;
+      const now = Date.now();
+      const elapsedMinutes = (now - doomscrollingStartedAt) / 60000;
+      const inactive = now - lastActivityAt > DOOMSCROLL_ACTIVITY_TIMEOUT;
+      const cooldownElapsed = now >= nextReminderAt;
+      const isTestMode = doomscrollingThresholdMinutes === 1;
+      const minimumScrollEvents = isTestMode ? DOOMSCROLL_TEST_SCROLL_EVENTS : DOOMSCROLL_MIN_SCROLL_EVENTS;
+      const minimumDistance = isTestMode ? DOOMSCROLL_TEST_DISTANCE : DOOMSCROLL_MIN_DISTANCE;
+
+      if (
+        elapsedMinutes >= doomscrollingThresholdMinutes &&
+        scrollEvents >= minimumScrollEvents &&
+        scrollDistance >= minimumDistance &&
+        !inactive &&
+        cooldownElapsed
+      ) {
+        showDoomscrollingReminder();
+      }
+    }
+
+    function showDoomscrollingReminder() {
+      reminderElement = document.createElement('aside');
+      reminderElement.className = 'shieldblock-break-reminder';
+      reminderElement.setAttribute('role', 'status');
+      reminderElement.innerHTML = `
+        <strong>You’ve been scrolling for a while.</strong>
+        <span>Would you like to take a short break?</span>
+        <div class="shieldblock-break-actions">
+          <button type="button" data-action="dismiss">Dismiss</button>
+          <button type="button" data-action="later">Remind me later</button>
+        </div>
+      `;
+      reminderElement.addEventListener('click', (event) => {
+        const action = event.target.closest('button')?.dataset.action;
+        if (!action) return;
+        const isTestMode = doomscrollingThresholdMinutes === 1;
+        const delayMinutes = isTestMode
+          ? 0.25
+          : action === 'later' ? 15 : doomscrollingCooldownMinutes;
+        nextReminderAt = Date.now() + delayMinutes * 60000;
+        reminderElement.remove();
+        reminderElement = null;
+        window.setTimeout(checkForDoomscrolling, delayMinutes * 60000 + 100);
+      });
+      (document.body || document.documentElement).appendChild(reminderElement);
     }
   }
 

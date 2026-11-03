@@ -7,6 +7,9 @@ const DEFAULT_SETTINGS = {
   isEnabled: true,
   cosmeticFiltering: true,
   trackerBlocking: true,
+  doomscrollingReminders: true,
+  doomscrollingThresholdMinutes: 20,
+  doomscrollingCooldownMinutes: 60,
   whitelistedDomains: [],
   customRules: [],
   stats: {
@@ -160,6 +163,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           isEnabled: settings.isEnabled !== false,
           isWhitelisted: whitelisted,
           cosmeticFiltering: settings.cosmeticFiltering !== false,
+          doomscrollingReminders: settings.doomscrollingReminders !== false,
+          doomscrollingThresholdMinutes: settings.doomscrollingThresholdMinutes || 20,
+          doomscrollingCooldownMinutes: settings.doomscrollingCooldownMinutes || 60,
           hostname,
           tabStats: currentStats,
           globalStats: settings.stats || DEFAULT_SETTINGS.stats

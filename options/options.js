@@ -29,6 +29,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const settingNetworkEngine = document.getElementById('settingNetworkEngine');
   const settingCosmeticEngine = document.getElementById('settingCosmeticEngine');
   const settingVideoEngine = document.getElementById('settingVideoEngine');
+  const settingDoomscrolling = document.getElementById('settingDoomscrolling');
+  const doomscrollingThreshold = document.getElementById('doomscrollingThreshold');
 
   // Whitelist Elements
   const whitelistInput = document.getElementById('whitelistInput');
@@ -50,6 +52,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     isEnabled: true,
     cosmeticFiltering: true,
     videoSkipper: true,
+    doomscrollingReminders: true,
+    doomscrollingThresholdMinutes: 20,
+    doomscrollingCooldownMinutes: 60,
     whitelistedDomains: [],
     customRules: [],
     stats: { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0 }
@@ -68,6 +73,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     settingNetworkEngine.checked = state.isEnabled !== false;
     settingCosmeticEngine.checked = state.cosmeticFiltering !== false;
     settingVideoEngine.checked = state.videoSkipper !== false;
+    settingDoomscrolling.checked = state.doomscrollingReminders !== false;
+    doomscrollingThreshold.value = state.doomscrollingThresholdMinutes || 20;
 
     renderWhitelist();
     renderCustomRules();
@@ -149,6 +156,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             isEnabled: state.isEnabled,
             cosmeticFiltering: state.cosmeticFiltering,
             videoSkipper: state.videoSkipper,
+            doomscrollingReminders: state.doomscrollingReminders,
+            doomscrollingThresholdMinutes: Number(state.doomscrollingThresholdMinutes),
+            doomscrollingCooldownMinutes: Number(state.doomscrollingCooldownMinutes),
             whitelistedDomains: state.whitelistedDomains,
             customRules: state.customRules
           }
@@ -221,6 +231,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     await saveSettings();
   });
 
+  settingDoomscrolling.addEventListener('change', async () => {
+    state.doomscrollingReminders = settingDoomscrolling.checked;
+    await saveSettings();
+  });
+
+  doomscrollingThreshold.addEventListener('change', async () => {
+    state.doomscrollingThresholdMinutes = Number(doomscrollingThreshold.value);
+    await saveSettings();
+  });
+
   // Reset Stats
   resetStatsBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to reset all blocked ad statistics?')) {
@@ -259,6 +279,9 @@ document.addEventListener('DOMContentLoaded', async () => {
           state.customRules = imported.customRules || [];
           state.isEnabled = imported.isEnabled !== false;
           state.cosmeticFiltering = imported.cosmeticFiltering !== false;
+          state.doomscrollingReminders = imported.doomscrollingReminders !== false;
+          state.doomscrollingThresholdMinutes = imported.doomscrollingThresholdMinutes || 20;
+          state.doomscrollingCooldownMinutes = imported.doomscrollingCooldownMinutes || 60;
           await saveSettings();
           await loadState();
           alert('Settings successfully imported!');
