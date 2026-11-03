@@ -1,0 +1,78 @@
+name: CI & Extension Quality Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test & Validate (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: 🐍 Setup Python 3
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🔍 Lint & Syntax Verification
+        run: npm run lint
+
+      - name: 🧪 Execute Test Suite
+        run: npm test
+
+      - name: 📦 Build Extension Package
+        run: npm run package
+
+      - name: 📤 Upload Build Artifact (Node 20 only)
+        if: matrix.node-version == '20.x'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-safe-web-surfing-extension
+          path: dist/*.zip
+          retention-days: 14
+
+  manifest-audit:
+    name: Manifest V3 Security & Permissions Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🛡️ Audit Host Permissions & Declarative Rules
+        run: |
+          python3 -c '
+          import json, sys
+
+          with open("manifest.json") as f:
+              m = json.load(f)
+
+          assert m.get("manifest_version") == 3, "Must be Manifest V3"
+          perms = m.get("permissions", [])
+          assert "declarativeNetRequest" in perms, "declarativeNetRequest missing"
+
+          with open("rules.json") as f:
+              rules = json.load(f)
+
+          print(f"Verified {len(rules)} Declarative Net Request rules.")
+          print(f"Permissions: {perms}")
+          print("Manifest V3 audit passed!")
+          '

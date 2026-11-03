@@ -1,0 +1,46 @@
+name: Release Packaged Extension
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🟢 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: 🐍 Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 🧪 Run Quality & Test Suite
+        run: |
+          npm run lint
+          npm test
+
+      - name: 📦 Build Release Zip Archive
+        run: npm run package
+
+      - name: 🚀 Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: dist/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: false
