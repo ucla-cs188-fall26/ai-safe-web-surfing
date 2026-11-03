@@ -1,0 +1,29 @@
+{
+  "name": "ai-safe-web-surfing",
+  "version": "1.0.0",
+  "description": "AI-Safe Web Surfing - Manifest V3 High Performance Ad & Tracker Protection",
+  "main": "background.js",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "test:manifest": "node --test tests/manifest.test.js",
+    "test:rules": "node --test tests/rules.test.js",
+    "test:cosmetic": "node --test tests/cosmetic.test.js",
+    "test:contracts": "node --test tests/message-contract.test.js",
+    "lint": "node scripts/lint.js",
+    "package": "python3 scripts/package-extension.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ucla-cs188-fall26/ai-safe-web-surfing.git"
+  },
+  "keywords": [
+    "adblocker",
+    "manifest-v3",
+    "chrome-extension",
+    "declarative-net-request",
+    "safe-browsing",
+    "privacy"
+  ],
+  "author": "UCLA CS188",
+  "license": "MIT"
+}
