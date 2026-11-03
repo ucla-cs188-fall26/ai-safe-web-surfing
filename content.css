@@ -1,0 +1,88 @@
+/**
+ * ShieldBlock - Cosmetic Filtering Stylesheet
+ * Injected at document_start to prevent CLS (Cumulative Layout Shift) and hide ads before paint.
+ */
+
+/* Common Google AdSense & AdManager elements */
+ins.adsbygoogle,
+[id^="google_ads_"],
+[id*="google_ads_iframe"],
+[id^="gpt_unit_"],
+[id^="dfp-ad-"],
+div[data-google-query-id],
+iframe[src*="googlesyndication.com"],
+iframe[src*="doubleclick.net"],
+iframe[src*="googleadservices.com"],
+
+/* Native & Sponsored Content Widgets (Taboola, Outbrain, Revcontent, etc.) */
+.trc_related_container,
+.trc_rbox_div,
+.outbrain_widget_container,
+.outbrain-display,
+div[class*="taboola-"],
+div[id*="taboola-"],
+div[class*="outbrain-"],
+div[id*="outbrain-"],
+.revcontent,
+div[class*="revcontent"],
+
+/* Generic Ad containers and class patterns */
+.ad-container,
+.ad-wrapper,
+.ad-banner,
+.ad-slot,
+.ad-placeholder,
+.ad-space,
+.ad-box,
+.ad-unit,
+.advertisement,
+.advertising,
+.banner-ad,
+.banner_ad,
+.ad_unit,
+.ad_slot,
+.ad_container,
+.header-ad,
+.footer-ad,
+.sidebar-ad,
+.sticky-ad,
+.floating-ad,
+div[class*="sponsor-content"],
+div[class*="sponsored-post"],
+div[class*="promoted-tweet"],
+div[data-ad-slot],
+div[data-ad-unit],
+div[data-ad-client],
+div[data-ad-name],
+div[data-adzone],
+
+/* Video Ads & Floating Overlays */
+.ytp-ad-overlay-container,
+.ytp-ad-message-container,
+.video-ads,
+.ima-ad-container,
+.vjs-ad-playing,
+
+/* Common Ad iframes */
+iframe[src*="amazon-adsystem.com"],
+iframe[src*="adnxs.com"],
+iframe[src*="criteo.com"],
+iframe[src*="openx.net"],
+iframe[src*="rubiconproject.com"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+}
