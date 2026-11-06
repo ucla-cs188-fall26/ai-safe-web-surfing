@@ -9,6 +9,74 @@
   if (window.__shieldBlockInjected) return;
   window.__shieldBlockInjected = true;
 
+  // Independent of filtering settings: inspect locally without reading field values.
+  function collectSafetySignals() {
+    const isHttp = (value) => {
+      try { return new URL(value, document.baseURI).protocol === 'http:'; }
+      catch { return false; }
+    };
+    return {
+      ready: document.readyState !== 'loading',
+      url: window.location.href,
+      hasPasswordField: !!document.querySelector('input[type="password" i]'),
+      hasHttpForm: Array.from(document.querySelectorAll('form')).some((form) =>
+        isHttp(form.getAttribute('action') || window.location.href)) ||
+        Array.from(document.querySelectorAll('button[formaction], input[formaction]')).some((el) =>
+          isHttp(el.getAttribute('formaction') || window.location.href)),
+      hasHttpResource: Array.from(document.querySelectorAll('script[src], iframe[src]')).some((el) =>
+        isHttp(el.getAttribute('src')))
+    };
+  }
+
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.action !== 'GET_SAFETY_SIGNALS') return;
+    sendResponse(collectSafetySignals());
+  });
+
+  // Safety warnings are independent of ad filtering and only appear in the top frame.
+  if (window === window.top) {
+    let dismissed = false;
+    let warningHost = null;
+    let warningSignature = '';
+    let pendingScan = null;
+    function updateSafetyWarning() {
+      pendingScan = null;
+      if (dismissed) return;
+      const safety = scoreWebsite(window.location.href, collectSafetySignals());
+      if (!shouldWarnWebsite(safety)) {
+        warningHost?.remove();
+        warningHost = null;
+        return;
+      }
+      const signature = JSON.stringify(safety);
+      if (warningHost && warningSignature === signature) return;
+      warningHost?.remove();
+      warningSignature = signature;
+      warningHost = createSafetyWarning(safety, () => {
+        dismissed = true;
+        warningObserver.disconnect();
+        warningHost.remove();
+        warningHost = null;
+      });
+      document.documentElement.appendChild(warningHost);
+    }
+    const warningObserver = new MutationObserver(() => {
+      if (!dismissed && pendingScan === null) pendingScan = setTimeout(updateSafetyWarning, 300);
+    });
+    function startSafetyWarnings() {
+      updateSafetyWarning();
+      warningObserver.observe(document.documentElement, {
+        childList: true, subtree: true, attributes: true,
+        attributeFilter: ['type', 'action', 'formaction', 'src']
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startSafetyWarnings, { once: true });
+    } else {
+      startSafetyWarnings();
+    }
+  }
+
   let isEnabled = true;
   let isWhitelisted = false;
   let cosmeticFiltering = true;

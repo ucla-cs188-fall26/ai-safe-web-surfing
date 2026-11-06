@@ -8,6 +8,8 @@ const vm = require('vm');
 
 const JS_FILES = [
   'background.js',
+  'website-score.js',
+  'safety-warning.js',
   'content.js',
   'popup/popup.js',
   'options/options.js'

@@ -3,6 +3,8 @@
  * Manages declarative net request rules, site allowlists, block statistics, and badge updates.
  */
 
+importScripts('website-score.js');
+
 const DEFAULT_SETTINGS = {
   isEnabled: true,
   cosmeticFiltering: true,
@@ -156,7 +158,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         const whitelisted = (settings.whitelistedDomains || []).includes(hostname);
         const currentStats = tabStats.get(tabId) || { network: 0, cosmetic: 0, total: 0 };
 
+        // Scan on demand; never reuse an assessment from a previous navigation.
+        let safety = scoreWebsite(url, null);
+        if (Number.isInteger(tabId) && /^https?:/.test(url || '')) {
+          try {
+            const signals = await chrome.tabs.sendMessage(tabId, { action: 'GET_SAFETY_SIGNALS' }, { frameId: 0 });
+            const currentTab = await chrome.tabs.get(tabId);
+            if (currentTab.url === url && currentTab.status !== 'loading') {
+              safety = scoreWebsite(url, signals);
+            }
+          } catch {
+            // Restricted pages and pages without a content script have no assessment.
+          }
+        }
+
         sendResponse({
+          safety,
           isEnabled: settings.isEnabled !== false,
           isWhitelisted: whitelisted,
           cosmeticFiltering: settings.cosmeticFiltering !== false,

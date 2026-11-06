@@ -72,6 +72,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       (res) => {
         if (!res) return;
 
+        const safety = res.safety;
+        document.getElementById('safetyScore').textContent =
+          safety?.score == null ? 'Unavailable' : `${safety.score}/100`;
+        const reasons = document.getElementById('safetyReasons');
+        reasons.replaceChildren();
+        for (const reason of safety?.reasons || []) {
+          const item = document.createElement('li');
+          item.textContent = `−${reason.points}: ${reason.message}`;
+          reasons.appendChild(item);
+        }
+        document.getElementById('safetyCoverage').textContent = safety?.score == null
+          ? 'No completed scan available. Finish loading and reopen the popup.'
+          : safety.reasons.length ? 'Coverage: current page DOM and URL.'
+            : 'No risks detected by these limited checks. Coverage: current page DOM and URL.';
+
         // Update Master Toggle state
         const isMasterActive = res.isEnabled && !res.isWhitelisted;
         updateMasterUI(isMasterActive, res.isWhitelisted);
