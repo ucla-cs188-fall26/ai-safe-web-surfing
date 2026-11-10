@@ -47,13 +47,15 @@ test('worker rejects navigation changes and unavailable content scripts', async 
   let listener;
   let activeUrl = 'https://example.com/';
   let fail = false;
+  let tabStatus = 'complete';
+  let ready = true;
   const event = { addListener() {} };
   const chrome = {
     runtime: { onInstalled: event, onMessage: { addListener(fn) { listener = fn; } } },
     tabs: {
       onRemoved: event, onUpdated: event,
-      async sendMessage() { if (fail) throw new Error('No receiver'); return scan('https://example.com/'); },
-      async get() { return { url: activeUrl, status: 'complete' }; }
+      async sendMessage() { if (fail) throw new Error('No receiver'); return scan('https://example.com/', { ready }); },
+      async get() { return { url: activeUrl, status: tabStatus }; }
     },
     storage: { local: { async get() { return {}; } } }
   };
@@ -64,8 +66,17 @@ test('worker rejects navigation changes and unavailable content scripts', async 
     action: 'GET_PAGE_STATUS', payload: { tabId: 1, url: 'https://example.com/' }
   }, {}, resolve));
   assert.equal((await request()).safety.score, 100);
+  tabStatus = 'loading';
+  assert.equal((await request()).safety.score, 100, 'ready DOM can be scored while resources load');
+  ready = false;
+  const pending = await request();
+  assert.equal(pending.safety.score, null);
+  assert.equal(pending.scanStatus, 'loading');
+  ready = true;
   activeUrl = 'https://other.example/';
   assert.equal((await request()).safety.score, null);
   fail = true;
-  assert.equal((await request()).safety.score, null);
+  const missing = await request();
+  assert.equal(missing.safety.score, null);
+  assert.equal(missing.scanStatus, 'missing-content-script');
 });
