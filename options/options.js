@@ -23,12 +23,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const dashTotalBlocked = document.getElementById('dashTotalBlocked');
   const dashNetworkBlocked = document.getElementById('dashNetworkBlocked');
   const dashCosmeticBlocked = document.getElementById('dashCosmeticBlocked');
+  const dashCookiesDismissed = document.getElementById('dashCookiesDismissed');
   const resetStatsBtn = document.getElementById('resetStatsBtn');
 
   // Engine toggles
   const settingNetworkEngine = document.getElementById('settingNetworkEngine');
   const settingCosmeticEngine = document.getElementById('settingCosmeticEngine');
   const settingVideoEngine = document.getElementById('settingVideoEngine');
+  const settingCookieEngine = document.getElementById('settingCookieEngine');
 
   // Whitelist Elements
   const whitelistInput = document.getElementById('whitelistInput');
@@ -50,9 +52,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     isEnabled: true,
     cosmeticFiltering: true,
     videoSkipper: true,
+    autoDismissCookies: true,
     whitelistedDomains: [],
     customRules: [],
-    stats: { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0 }
+    stats: { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0, cookiesDismissed: 0 }
   };
 
   // Load state from chrome.storage
@@ -64,10 +67,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     dashTotalBlocked.textContent = (state.stats?.totalBlocked || 0).toLocaleString();
     dashNetworkBlocked.textContent = (state.stats?.networkBlocked || 0).toLocaleString();
     dashCosmeticBlocked.textContent = (state.stats?.cosmeticBlocked || 0).toLocaleString();
+    dashCookiesDismissed.textContent = (state.stats?.cookiesDismissed || 0).toLocaleString();
 
     settingNetworkEngine.checked = state.isEnabled !== false;
     settingCosmeticEngine.checked = state.cosmeticFiltering !== false;
     settingVideoEngine.checked = state.videoSkipper !== false;
+    settingCookieEngine.checked = state.autoDismissCookies !== false;
 
     renderWhitelist();
     renderCustomRules();
@@ -149,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             isEnabled: state.isEnabled,
             cosmeticFiltering: state.cosmeticFiltering,
             videoSkipper: state.videoSkipper,
+            autoDismissCookies: state.autoDismissCookies,
             whitelistedDomains: state.whitelistedDomains,
             customRules: state.customRules
           }
@@ -221,6 +227,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     await saveSettings();
   });
 
+  settingCookieEngine.addEventListener('change', async () => {
+    state.autoDismissCookies = settingCookieEngine.checked;
+    await saveSettings();
+  });
+
   // Reset Stats
   resetStatsBtn.addEventListener('click', () => {
     if (confirm('Are you sure you want to reset all blocked ad statistics?')) {
@@ -229,6 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           dashTotalBlocked.textContent = '0';
           dashNetworkBlocked.textContent = '0';
           dashCosmeticBlocked.textContent = '0';
+          dashCookiesDismissed.textContent = '0';
         }
       });
     }
@@ -259,6 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           state.customRules = imported.customRules || [];
           state.isEnabled = imported.isEnabled !== false;
           state.cosmeticFiltering = imported.cosmeticFiltering !== false;
+          state.autoDismissCookies = imported.autoDismissCookies !== false;
           await saveSettings();
           await loadState();
           alert('Settings successfully imported!');

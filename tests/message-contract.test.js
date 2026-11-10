@@ -20,6 +20,7 @@ describe('Message Passing Contract & Action Synchronization Tests', () => {
       'TOGGLE_GLOBAL',
       'TOGGLE_SITE_WHITELIST',
       'INCREMENT_COSMETIC_BLOCKED',
+      'INCREMENT_COOKIES_DISMISSED',
       'RESET_STATS',
       'UPDATE_SETTINGS'
     ];

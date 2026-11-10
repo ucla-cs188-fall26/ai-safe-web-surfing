@@ -117,6 +117,15 @@
             <div class="stat-value" id="dashCosmeticBlocked">0</div>
             <div class="stat-desc">Hidden banner placeholders & dynamic overlays</div>
           </div>
+
+          <div class="dashboard-stat-card glow-amber">
+            <div class="stat-header">
+              <span class="stat-label">Cookies Declined</span>
+              <div class="stat-badge amber">Auto-Dismiss</div>
+            </div>
+            <div class="stat-value" id="dashCookiesDismissed">0</div>
+            <div class="stat-desc">Cookie consent banners automatically rejected</div>
+          </div>
         </div>
 
         <div class="settings-card">
@@ -150,6 +159,17 @@
             </div>
             <label class="switch">
               <input type="checkbox" id="settingVideoEngine" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Auto-Decline Cookies</h4>
+              <p>Automatically detects and clicks reject/decline buttons on cookie consent banners.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingCookieEngine" checked>
               <span class="slider round"></span>
             </label>
           </div>
