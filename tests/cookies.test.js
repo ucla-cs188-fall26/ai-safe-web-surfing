@@ -79,4 +79,11 @@ describe('Cookie Auto-Decline Feature Tests', () => {
     const cs = manifest.content_scripts[0];
     assert.strictEqual(cs.all_frames, true, 'content_scripts must have all_frames: true to handle iframe cookie banners');
   });
+
+  test('content.js supports 2-step banner preference center navigation (Settings -> Reject/Save)', () => {
+    assert.ok(contentJs.includes('attemptTwoStepDecline'), 'Must define attemptTwoStepDecline');
+    assert.ok(contentJs.includes('resolvePreferenceCenter'), 'Must define resolvePreferenceCenter');
+    assert.ok(contentJs.includes('COOKIE_SETTINGS_BUTTON_SELECTORS'), 'Must define settings button selectors');
+    assert.ok(contentJs.includes('COOKIE_SAVE_BUTTON_SELECTORS'), 'Must define save button selectors');
+  });
 });

@@ -229,6 +229,56 @@
 
   const COOKIE_BANNER_COMBINED_SELECTOR = COOKIE_BANNER_SELECTORS.join(', ');
 
+  // Preference Center / Settings Button Selectors (Step 1 of 2-step banners)
+  const COOKIE_SETTINGS_BUTTON_SELECTORS = [
+    '#onetrust-pc-btn-handler',
+    '#didomi-notice-learn-more-button',
+    '.fc-cta-manage-options',
+    '.qc-cmp2-summary-buttons button[mode="secondary"]',
+    'button[id*="settings" i]',
+    'button[class*="settings" i]',
+    'button[id*="manage" i]',
+    'button[class*="manage" i]',
+    'button[id*="preference" i]',
+    'button[class*="preference" i]',
+    'button[aria-label*="preference" i]',
+    'button[aria-label*="settings" i]',
+    'a[id*="settings" i]',
+    'a[class*="settings" i]',
+    'a[id*="preferences" i]',
+    'a[class*="preferences" i]',
+    'a[href*="opt-out" i]',
+    'a[href*="privacy" i]'
+  ];
+
+  const COOKIE_SETTINGS_TEXT_PATTERNS = [
+    /\b(settings|preferences|customize|manage\s*(options|preferences|cookies)?|more\s*options)\b/i,
+    /\bdo\s*not\s*sell(\s*my\s*(personal\s*)?info(rmation)?)?\b/i,
+    /\bopt[- ]?out\b/i
+  ];
+
+  // Preference Center Save / Reject Selectors (Step 2 of 2-step banners)
+  const COOKIE_SAVE_BUTTON_SELECTORS = [
+    '.ot-pc-refuse-all-handler',
+    '.save-preference-btn-handler',
+    '#onetrust-reject-all-handler',
+    '#didomi-consent-popup-actions-disagree',
+    '.fc-confirm-choices',
+    '.fc-data-preferences-reject-all',
+    '.qc-cmp2-footer-btn',
+    'button[id*="reject-all" i]',
+    'button[class*="reject-all" i]',
+    'button[id*="save" i]',
+    'button[class*="save" i]',
+    'button[id*="confirm" i]',
+    'button[class*="confirm" i]'
+  ];
+
+  const COOKIE_SAVE_TEXT_PATTERNS = [
+    /\b(reject\s*(all)?|disallow\s*(all)?|object\s*(all)?|deselect\s*(all)?|deny\s*(all)?)\b/i,
+    /\b(save(\s*&\s*exit)?|save\s*(my\s*)?preferences|confirm\s*(my\s*)?choices|confirm\s*selection|save\s*choices)\b/i
+  ];
+
   // Request status from background worker
   function checkStatusAndInitialize() {
     try {
@@ -431,7 +481,123 @@
           return;
         }
       }
+
+      // 4. Two-Step Fallback: If no direct reject button exists on the banner, enter Settings/Options
+      if (attemptTwoStepDecline(banner)) {
+        return;
+      }
     }
+  }
+
+  let isNavigatingSettings = false;
+
+  // Handles 2-step banners: enters Settings/Options/Do Not Sell, then confirms/rejects all
+  function attemptTwoStepDecline(banner) {
+    if (isNavigatingSettings || !banner) return false;
+
+    // Search for a Settings / Preferences / Manage button inside the banner
+    let settingsBtn = null;
+    for (const selector of COOKIE_SETTINGS_BUTTON_SELECTORS) {
+      try {
+        const btn = banner.querySelector(selector);
+        if (btn && !btn.dataset.sbClicked && isElementVisible(btn)) {
+          settingsBtn = btn;
+          break;
+        }
+      } catch {}
+    }
+
+    if (!settingsBtn) {
+      const clickables = banner.querySelectorAll('button, a[role="button"], a[href], input[type="button"]');
+      for (const el of clickables) {
+        if (el.dataset.sbClicked) continue;
+        const text = (el.textContent || el.value || el.getAttribute('aria-label') || '').trim();
+        if (text && COOKIE_SETTINGS_TEXT_PATTERNS.some((pattern) => pattern.test(text))) {
+          settingsBtn = el;
+          break;
+        }
+      }
+    }
+
+    if (!settingsBtn) return false;
+
+    // Step 1: Open Settings / Preferences modal
+    isNavigatingSettings = true;
+    settingsBtn.dataset.sbClicked = 'true';
+    triggerClick(settingsBtn);
+
+    // Step 2: Handle preference center after it opens
+    setTimeout(() => {
+      resolvePreferenceCenter(banner);
+      isNavigatingSettings = false;
+    }, 450);
+
+    return true;
+  }
+
+  // Resolves the opened preference center modal (rejects all / confirms minimal choices)
+  function resolvePreferenceCenter(originalBanner) {
+    const dialogSelectors = [
+      '#onetrust-pc-sdk',
+      '.ot-pc-container',
+      '#didomi-consent-popup',
+      '.fc-dialog',
+      '.qc-cmp2-container',
+      '[role="dialog"]',
+      '[aria-modal="true"]',
+      COOKIE_BANNER_COMBINED_SELECTOR
+    ].join(', ');
+
+    const dialogs = document.querySelectorAll(dialogSelectors);
+    let targetModal = null;
+    for (const d of dialogs) {
+      if (isElementVisible(d)) {
+        targetModal = d;
+        break;
+      }
+    }
+    if (!targetModal) targetModal = originalBanner || document.body;
+
+    // 1. Look for a "Reject All" / "Object All" / "Disallow All" button in the modal
+    for (const selector of COOKIE_SAVE_BUTTON_SELECTORS) {
+      try {
+        const btn = targetModal.querySelector(selector);
+        if (btn && !btn.dataset.sbClicked && isElementVisible(btn)) {
+          btn.dataset.sbClicked = 'true';
+          if (originalBanner) originalBanner.dataset.sbDismissed = 'true';
+          targetModal.dataset.sbDismissed = 'true';
+          triggerClick(btn);
+          cookieDismissed = true;
+          notifyCookieDismissed();
+          setTimeout(hideCookieBanners, 400);
+          return;
+        }
+      } catch {}
+    }
+
+    // 2. Scan text patterns for Reject All or Save / Confirm Choices
+    const clickables = targetModal.querySelectorAll('button, a[role="button"], a[href], input[type="button"], input[type="submit"]');
+    for (const el of clickables) {
+      if (el.dataset.sbClicked) continue;
+      const text = (el.textContent || el.value || el.getAttribute('aria-label') || '').trim();
+      if (text && COOKIE_SAVE_TEXT_PATTERNS.some((p) => p.test(text))) {
+        el.dataset.sbClicked = 'true';
+        if (originalBanner) originalBanner.dataset.sbDismissed = 'true';
+        targetModal.dataset.sbDismissed = 'true';
+        triggerClick(el);
+        cookieDismissed = true;
+        notifyCookieDismissed();
+        setTimeout(hideCookieBanners, 400);
+        return;
+      }
+    }
+
+    // Fallback: clean up remaining overlays
+    if (originalBanner) originalBanner.dataset.sbDismissed = 'true';
+    if (targetModal) targetModal.dataset.sbDismissed = 'true';
+    cookieDismissed = true;
+    notifyCookieDismissed();
+    setTimeout(hideCookieBanners, 400);
   }
 
   // Hide remaining cookie banners after dismissal via CSS and unlock page scrolling
