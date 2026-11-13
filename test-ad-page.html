@@ -122,6 +122,16 @@
 </head>
 <body>
   <div class="container">
+    <div id="shieldBlockStatusNotice" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #fbbf24; padding: 16px; border-radius: 8px; font-size: 14px;">
+      <strong>⚠️ ShieldBlock content script not detected on this page!</strong>
+      <p style="margin-top: 6px; color: #cbd5e1;">If viewing via <code>file:///</code>, Chrome blocks extensions on local files by default. To fix:
+        <br>1. Go to <code>chrome://extensions</code>
+        <br>2. Click <strong>Details</strong> on ShieldBlock
+        <br>3. Toggle ON <strong>"Allow access to file URLs"</strong> and refresh this page.
+        <br><em>Alternatively, serve this folder via HTTP: <code>npx serve .</code> or <code>python3 -m http.server 8000</code>.</em>
+      </p>
+    </div>
+
     <header>
       <h1>ShieldBlock Ad Blocker Test Ground</h1>
       <p>Use this page to verify network filtering, cosmetic DOM collapsing, and popup counters.</p>
@@ -171,9 +181,30 @@
       <button class="btn-test" id="injectAdBtn">Inject Dynamic Ad Banner</button>
       <div id="dynamicAdContainer" style="margin-top: 15px;"></div>
     </div>
+
+    <!-- Test 4: Cookie Banner Auto-Decline -->
+    <div class="card">
+      <h2>
+        <span>Test 4: Cookie Banner Auto-Decline</span>
+        <span class="status-badge">Cookie Auto-Dismiss</span>
+      </h2>
+      <p>Simulates a standard GDPR/CCPA cookie consent dialog. ShieldBlock should automatically trigger the decline/reject action upon detection:</p>
+
+      <button class="btn-test" id="injectCookieBannerBtn">Simulate Cookie Banner Popup</button>
+      <div class="log-box" id="cookieLog" style="margin-top: 12px;">Cookie consent banner status will be logged here...</div>
+      <div id="cookieBannerContainer" style="margin-top: 15px;"></div>
+    </div>
   </div>
 
   <script>
+    // Check if ShieldBlock content script is active
+    setTimeout(() => {
+      if (!document.documentElement.hasAttribute('data-shieldblock-active')) {
+        const notice = document.getElementById('shieldBlockStatusNotice');
+        if (notice) notice.style.display = 'block';
+      }
+    }, 500);
+
     // Network test button
     document.getElementById('testNetworkBtn').addEventListener('click', async () => {
       const log = document.getElementById('networkLog');
@@ -202,6 +233,72 @@
       ad.className = 'ad-container';
       ad.textContent = '⚠️ Dynamically Injected Ad Container';
       container.appendChild(ad);
+    });
+
+    // Simulated Cookie Banner
+    const cookieLog = document.getElementById('cookieLog');
+
+    function markCookieSuccess() {
+      cookieLog.textContent = '✅ SUCCESS: "Reject All" button was automatically clicked by ShieldBlock!';
+      cookieLog.style.color = '#10b981';
+    }
+    window.markCookieSuccess = markCookieSuccess;
+    window.addEventListener('shieldblock:cookie-dismissed', markCookieSuccess);
+
+    function createCookieBanner() {
+      const banner = document.createElement('div');
+      banner.id = 'onetrust-banner-sdk';
+      banner.className = 'cookie-consent-banner';
+      banner.style.cssText = 'background: #1e1b4b; border: 2px solid #6366f1; border-radius: 8px; padding: 18px; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 15px;';
+      banner.innerHTML = `
+        <div>
+          <strong style="color: #c7d2fe;">🍪 We value your privacy</strong>
+          <p style="font-size: 13px; color: #94a3b8; margin-top: 4px;">We use cookies to enhance browsing experience and serve personalized ads.</p>
+        </div>
+        <div style="display: flex; gap: 8px; flex-shrink: 0;">
+          <button id="onetrust-reject-all-handler" onclick="window.markCookieSuccess()" style="background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">Reject All</button>
+          <button id="onetrust-accept-btn-handler" style="background: #6366f1; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600;">Accept All</button>
+        </div>
+      `;
+
+      const rejectBtn = banner.querySelector('#onetrust-reject-all-handler');
+      rejectBtn.addEventListener('click', markCookieSuccess);
+      rejectBtn.addEventListener('mousedown', markCookieSuccess);
+      rejectBtn.addEventListener('pointerdown', markCookieSuccess);
+
+      banner.querySelector('#onetrust-accept-btn-handler').addEventListener('click', () => {
+        cookieLog.textContent = '❌ Accept All was clicked.';
+        cookieLog.style.color = '#f43f5e';
+      });
+
+      return banner;
+    }
+
+    // Observe banner container to ensure UI reflects ShieldBlock dismiss actions
+    const containerObserver = new MutationObserver(() => {
+      const banner = document.getElementById('onetrust-banner-sdk');
+      if (banner && (banner.style.display === 'none' || banner.dataset.sbDismissed || banner.dataset.sbCookieHidden)) {
+        markCookieSuccess();
+      }
+    });
+    const bannerContainer = document.getElementById('cookieBannerContainer');
+    if (bannerContainer) {
+      containerObserver.observe(bannerContainer, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'data-sb-dismissed', 'data-sb-cookie-hidden'] });
+    }
+
+    document.getElementById('injectCookieBannerBtn').addEventListener('click', () => {
+      const container = document.getElementById('cookieBannerContainer');
+      container.innerHTML = '';
+      cookieLog.textContent = 'Cookie banner injected into page. Awaiting ShieldBlock auto-dismiss...';
+      cookieLog.style.color = '#94a3b8';
+      container.appendChild(createCookieBanner());
+    });
+
+    // Also auto-inject on load to test immediate document load detection
+    window.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('cookieBannerContainer');
+      cookieLog.textContent = 'Initial cookie banner loaded. Awaiting ShieldBlock auto-dismiss...';
+      container.appendChild(createCookieBanner());
     });
   </script>
 </body>
