@@ -465,6 +465,17 @@ input:checked + .slider:before {
   transform: translateX(16px);
 }
 
+.safety-card {
+  padding: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+  font-size: 12px;
+}
+.safety-card p { color: var(--text-muted); margin: 8px 0 0; }
+.safety-card ul { padding-left: 18px; margin: 8px 0; }
+.safety-card li + li { margin-top: 6px; }
+
 /* Footer Reload */
 .footer {
   display: flex;

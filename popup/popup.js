@@ -19,6 +19,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let currentTab = null;
   let currentHostname = '';
+  let retryTimer = null;
+  window.addEventListener('unload', () => clearTimeout(retryTimer));
 
   // Helper to extract clean domain
   function extractHostname(url) {
@@ -54,6 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Fetch active tab and query extension status
   async function loadStatus() {
+    clearTimeout(retryTimer);
     const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
     currentTab = tabs[0];
 
@@ -71,7 +74,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         payload: { tabId: currentTab.id, url: currentTab.url }
       },
       (res) => {
-        if (!res) return;
+        const error = chrome.runtime.lastError;
+        if (error || !res) {
+          document.getElementById('safetyCoverage').textContent =
+            'Could not contact the extension. Reload the extension and refresh this page.';
+          return;
+        }
+
+        const safety = res.safety;
+        const pending = safety?.score == null && res.scanStatus === 'loading';
+        document.getElementById('safetyScore').textContent =
+          safety?.score == null ? (pending ? 'Scanning…' : 'Unavailable') : `${safety.score}/100`;
+        const reasons = document.getElementById('safetyReasons');
+        reasons.replaceChildren();
+        for (const reason of safety?.reasons || []) {
+          const item = document.createElement('li');
+          item.textContent = `−${reason.points}: ${reason.message}`;
+          reasons.appendChild(item);
+        }
+        document.getElementById('safetyCoverage').textContent = safety?.score == null
+          ? pending ? 'Waiting for the page to load. The score will update automatically.'
+            : res.scanStatus === 'unsupported'
+              ? 'Safety scans are available on HTTP and HTTPS webpages only.'
+              : 'Cannot read this page. Refresh the webpage to connect the extension. Some browser pages restrict extensions.'
+          : safety.reasons.length ? 'Coverage: current page DOM and URL.'
+            : 'No risks detected by these limited checks. Coverage: current page DOM and URL.';
+        if (pending || res.scanStatus === 'missing-content-script') {
+          retryTimer = setTimeout(loadStatus, 1000);
+        }
 
         // Update Master Toggle state
         const isMasterActive = res.isEnabled && !res.isWhitelisted;

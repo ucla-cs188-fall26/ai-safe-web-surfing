@@ -22,6 +22,8 @@ include_files = [
     "manifest.json",
     "rules.json",
     "background.js",
+    "website-score.js",
+    "safety-warning.js",
     "content.js",
     "content.css",
     "test-ad-page.html",

@@ -16,6 +16,8 @@ ShieldBlock is a high-performance, lightweight, and privacy-focused browser exte
   - Per-site allowlisting toggle.
   - Real-time badge counter and live session & all-time blocked statistics.
   - Direct quick reload action.
+- **Local safety score**: The popup scans the current page independently of ad blocking. Starting at 100, it deducts 25 for HTTP, 40 for a password field on HTTP, 30 for an HTTP form destination, and 15 for HTTP script/iframe references on HTTPS. Each category applies once, with a floor of zero. These heuristic weights are not probabilities; a score of 100 only means these checks found no risks. Content reliability and reputation are not assessed. Missing scans show “Unavailable.” Scans stay local and do not read field values. Reopen the popup after loading or page changes to refresh.
+- **Automatic safety warnings**: Pages scoring below 70 display a prominent, dismissible warning in the upper-right corner, with the score and detected risks. Checks also catch dynamically added forms and password fields. Dismissal lasts until the page reloads or a new document loads. Warnings work independently of ad-blocking settings; a score of exactly 70 does not trigger a warning.
 - **Full Settings Dashboard**:
   - Allowlist manager (domain whitelist).
   - Custom user filter rules editor.

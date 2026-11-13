@@ -35,6 +35,8 @@
         "content.css"
       ],
       "js": [
+        "website-score.js",
+        "safety-warning.js",
         "content.js"
       ],
       "run_at": "document_start"
