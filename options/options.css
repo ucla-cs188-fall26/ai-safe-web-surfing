@@ -194,7 +194,7 @@ body {
 /* Stats Cards Grid */
 .stats-cards-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
 }
 
@@ -226,6 +226,10 @@ body {
   border-color: rgba(168, 85, 247, 0.4);
 }
 
+.dashboard-stat-card.glow-amber:hover {
+  border-color: rgba(245, 158, 11, 0.4);
+}
+
 .stat-header {
   display: flex;
   align-items: center;
@@ -255,6 +259,11 @@ body {
 .stat-badge.purple {
   background: rgba(168, 85, 247, 0.15);
   color: var(--primary-purple);
+}
+
+.stat-badge.amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
 }
 
 .stat-value {

@@ -9,12 +9,17 @@ const DEFAULT_SETTINGS = {
   isEnabled: true,
   cosmeticFiltering: true,
   trackerBlocking: true,
+  doomscrollingReminders: true,
+  doomscrollingThresholdMinutes: 20,
+  doomscrollingCooldownMinutes: 60,
+  autoDismissCookies: true,
   whitelistedDomains: [],
   customRules: [],
   stats: {
     totalBlocked: 0,
     networkBlocked: 0,
-    cosmeticBlocked: 0
+    cosmeticBlocked: 0,
+    cookiesDismissed: 0
   }
 };
 
@@ -72,10 +77,18 @@ if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.onRuleMatchedDe
 
 // Helper to increment persistent global statistics
 async function incrementGlobalStats(key, amount = 1) {
-  const { stats = { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0 } } =
+  const { stats = { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0, cookiesDismissed: 0 } } =
     await chrome.storage.local.get('stats');
   stats[key] = (stats[key] || 0) + amount;
   stats.totalBlocked = (stats.totalBlocked || 0) + amount;
+  await chrome.storage.local.set({ stats });
+}
+
+// Helper to increment cookie dismiss counter (separate from totalBlocked)
+async function incrementCookieStats(amount = 1) {
+  const { stats = { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0, cookiesDismissed: 0 } } =
+    await chrome.storage.local.get('stats');
+  stats.cookiesDismissed = (stats.cookiesDismissed || 0) + amount;
   await chrome.storage.local.set({ stats });
 }
 
@@ -182,6 +195,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           isEnabled: settings.isEnabled !== false,
           isWhitelisted: whitelisted,
           cosmeticFiltering: settings.cosmeticFiltering !== false,
+          doomscrollingReminders: settings.doomscrollingReminders !== false,
+          doomscrollingThresholdMinutes: settings.doomscrollingThresholdMinutes || 20,
+          doomscrollingCooldownMinutes: settings.doomscrollingCooldownMinutes || 60,
+          autoDismissCookies: settings.autoDismissCookies !== false,
           hostname,
           tabStats: currentStats,
           globalStats: settings.stats || DEFAULT_SETTINGS.stats
@@ -239,8 +256,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         break;
       }
 
+      case 'INCREMENT_COOKIES_DISMISSED': {
+        const count = payload?.count || 1;
+        await incrementCookieStats(count);
+        sendResponse({ success: true });
+        break;
+      }
+
       case 'RESET_STATS': {
-        const stats = { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0 };
+        const stats = { totalBlocked: 0, networkBlocked: 0, cosmeticBlocked: 0, cookiesDismissed: 0 };
         await chrome.storage.local.set({ stats });
         tabStats.clear();
         sendResponse({ success: true, stats });

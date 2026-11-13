@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const totalBlockedCount = document.getElementById('totalBlockedCount');
   const cosmeticToggle = document.getElementById('cosmeticToggle');
   const trackerToggle = document.getElementById('trackerToggle');
+  const cookieToggle = document.getElementById('cookieToggle');
   const reloadTabBtn = document.getElementById('reloadTabBtn');
   const openSettingsBtn = document.getElementById('openSettingsBtn');
 
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Preferences
         cosmeticToggle.checked = res.cosmeticFiltering;
+        cookieToggle.checked = res.autoDismissCookies !== false;
       }
     );
   }
@@ -179,6 +181,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       {
         action: 'UPDATE_SETTINGS',
         payload: { trackerBlocking: trackerToggle.checked }
+      },
+      () => showReloadPrompt()
+    );
+  });
+
+  // Cookie auto-decline toggle change
+  cookieToggle.addEventListener('change', () => {
+    chrome.runtime.sendMessage(
+      {
+        action: 'UPDATE_SETTINGS',
+        payload: { autoDismissCookies: cookieToggle.checked }
       },
       () => showReloadPrompt()
     );
