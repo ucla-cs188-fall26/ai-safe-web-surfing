@@ -165,6 +165,31 @@
 
           <div class="setting-item">
             <div class="setting-text">
+              <h4>Scrolling Break Reminders</h4>
+              <p>Shows a local reminder after sustained, active scrolling.</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settingDoomscrolling" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
+              <h4>Reminder Threshold</h4>
+              <p>How long active scrolling must continue before a reminder appears.</p>
+            </div>
+            <select id="doomscrollingThreshold" class="setting-select">
+              <option value="1">1 minute (temporary test)</option>
+              <option value="15">15 minutes</option>
+              <option value="20">20 minutes</option>
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+            </select>
+          </div>
+
+          <div class="setting-item">
+            <div class="setting-text">
               <h4>Auto-Decline Cookies</h4>
               <p>Automatically detects and clicks reject/decline buttons on cookie consent banners.</p>
             </div>
