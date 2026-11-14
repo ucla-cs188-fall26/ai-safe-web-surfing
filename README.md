@@ -98,16 +98,16 @@ You can run the interactive test suite using either of the following methods:
   ```
 
 #### Verifying Test Cases on the Test Page:
-1. **Cosmetic Ad Hiding (Scenario 2):**
+1. **Cosmetic Ad Hiding (Scenario 1):**
    * Inspect the **"Test 1: Cosmetic DOM Ad Element Hiding"** card.
    * Notice that the red leaderboard banner, sponsored widget, and Google AdSense container are completely hidden and collapsed (0px height).
-2. **Network Request Blocking (Scenario 1):**
+2. **Network Request Blocking (Scenario 2):**
    * In **"Test 2: Declarative Network Request Blocking"**, click the green button labeled **"Simulate Ad Network Fetch"**.
    * The log box will confirm that network calls to DoubleClick, Google Syndication, and AppNexus were intercepted and blocked by the DNR engine.
-3. **Dynamic Ad Injection (Scenario 2):**
+3. **Dynamic Ad Injection (Scenario 3):**
    * In **"Test 3: Dynamic Ad Injection & MutationObserver"**, click **"Inject Dynamic Ad Banner"**.
    * ShieldBlock's dynamic observer detects the injected node and collapses it immediately.
-4. **Cookie Consent Auto-Decline (Scenario 3):**
+4. **Cookie Consent Auto-Decline (Scenario 4):**
    * In **"Test 4: Cookie Banner Auto-Decline"**, click **"Simulate Cookie Banner Popup"**.
    * Watch ShieldBlock detect the banner, simulate a click on **"Reject All"**, and display: `✅ SUCCESS: "Reject All" button was automatically clicked by ShieldBlock!`.
 
@@ -115,12 +115,12 @@ You can run the interactive test suite using either of the following methods:
 
 ### B. Running Live Web Scenarios
 
-#### Running Scenario 3: Cookie Auto-Decline on Live Sites
+#### Running Scenario 1: Cookie Auto-Decline on Live Sites
 1. Ensure **"Auto-Decline Cookies"** is enabled in the popup or settings dashboard.
 2. Visit websites with GDPR/CCPA consent banners.
 3. The extension detects the consent framework, selects the decline/reject option, dismisses the overlay, and restores normal page interaction.
 
-#### Running Scenario 4: Local Safety Score & Insecure Page Warning
+#### Running Scenario 2: Local Safety Score & Insecure Page Warning
 1. Click the ShieldBlock icon in your toolbar on any open webpage.
 2. The popup displays the **Local safety score** (e.g., `100/100` on secure HTTPS sites with no detected risks).
 3. To test the security warning banner:
@@ -128,7 +128,7 @@ You can run the interactive test suite using either of the following methods:
    * Observe the warning card injected into the top-right corner of the page showing the reduced score and specific risk warnings.
    * Click **"Dismiss"** to dismiss the notification for the current page session.
 
-#### Running Scenario 5: Mindful Browsing & Doomscrolling Reminder
+#### Running Scenario 3: Mindful Browsing & Doomscrolling Reminder
 1. Open the ShieldBlock popup and click the gear icon to open **Extension Settings** (or right-click the extension icon and select **Options**).
 2. Under **Protection Engines**, locate **"Reminder Threshold"** and select **"1 minute (temporary test)"**.
 3. Open a content-heavy or social media website (e.g., news or Reddit) and actively scroll for 60 seconds.
@@ -136,19 +136,15 @@ You can run the interactive test suite using either of the following methods:
    > *"You’ve been scrolling for a while. Would you like to take a short break?"*
 5. Test clicking **"Remind me later"** (15-minute snooze) or **"Dismiss"** (cooldown period).
 
-#### Running Scenario 6: Video Ad Acceleration
+#### Running Scenario 4: Video Ad Acceleration
 1. Navigate to YouTube or any HTML5 video player.
 2. Play any video where pre-roll or mid-roll ads are served.
 3. ShieldBlock will automatically click the "Skip Ad" button the instant it becomes available, or accelerate through unskippable segments at 16x speed with sound muted.
 
-#### Running Scenario 7: Allowlisting and Settings Management
+#### Running Scenario 5: Allowlisting and Settings Management
 1. **Per-Site Allowlist:**
    * Open the popup on any domain and toggle **"Current Website"** allowlist switch.
    * Notice that filtering is paused for that domain without disabling global protection.
-2. **Settings Backup & Sync:**
-   * Open the Options dashboard and navigate to the **Backup & Sync** tab.
-   * Click **"Export Settings"** to save your rules and allowlist as a JSON file.
-   * Use **"Import Settings"** to restore configurations across browser profiles.
 
 ---
 
