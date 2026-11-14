@@ -28,13 +28,15 @@
     };
   }
 
-  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.action !== 'GET_SAFETY_SIGNALS') return;
-    sendResponse(collectSafetySignals());
-  });
+  if (chrome?.runtime?.onMessage?.addListener) {
+    chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+      if (message.action !== 'GET_SAFETY_SIGNALS') return;
+      sendResponse(collectSafetySignals());
+    });
+  }
 
   // Safety warnings are independent of ad filtering and only appear in the top frame.
-  if (window === window.top) {
+  if (window === window.top && typeof scoreWebsite === 'function' && typeof shouldWarnWebsite === 'function' && typeof createSafetyWarning === 'function') {
     let dismissed = false;
     let warningHost = null;
     let warningSignature = '';
